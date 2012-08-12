@@ -1,0 +1,39 @@
+Identifier = "Yague"
+Name =
+{
+	English = "Yague",
+	French = "Yague",
+	German = "Yague",
+}
+NameShort = "Yague"
+Description =
+{
+	English = "GUI Library",
+}
+Author = "Baanano"
+Version = "0.4.4"
+Email = "baanano.rift@gmail.com"
+Environment = "1.9"
+Dependencies =
+{
+	LibAsyncTextures = { "required", "before", }
+}
+Embed =
+{
+	LibAsyncTextures = true,
+}
+RunOnStartup =
+{
+	"Init.lua",
+	"Scheduler.lua",
+	"EventHandler.lua",
+	"Panel.lua",
+	"ShadowedText.lua",
+	"Dropdown.lua",
+	"MoneyDisplay.lua",
+	"MoneySelector.lua",
+	"Slider.lua",
+	"DataGrid.lua",
+	"Window.lua",
+	"TabControl.lua",
+}
