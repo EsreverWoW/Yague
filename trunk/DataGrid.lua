@@ -603,7 +603,6 @@ function PublicInterface.DataGrid(name, parent)
 		
 		if not selectedKey or not data[selectedKey] or filterKeys[selectedKey] then
 			local ordering = filterOrderings[orderColumn] or filterKeyOrdering
---			self:SetSelectedKey(ordering[orderReverse and #ordering or 1])
 			lastIndex = MMax(MMin(lastIndex, #ordering), 1)
 			if orderReverse then lastIndex = #ordering - lastIndex + 1 end
 			self:SetSelectedKey(ordering[lastIndex])
@@ -646,7 +645,7 @@ function PublicInterface.DataGrid(name, parent)
 		return ret
 	end
 	
-	function bDataGrid:SetData(datum, firstKey)
+	function bDataGrid:SetData(datum, firstKey, callback)
 		local lastIndex = GetSelectedIndex()
 		local lastScrollbarPosition = verticalScrollBar:GetPosition()
 		firstKey = firstKey or selectedKey
@@ -697,6 +696,8 @@ function PublicInterface.DataGrid(name, parent)
 			
 			if orderReverse then lastIndex = #ordering - lastIndex + 1 end
 			self:SetSelectedKey(ordering[lastIndex])
+			
+			if type(callback) == "function" then callback() end
 		end
 		
 		QueueTask(CreateOrderings, EndSetData)

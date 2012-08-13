@@ -1,2 +1,5 @@
+	r3
+- Added callback to SetData method of the DataGrid control (to be called when completed)
+
 	Release 0.4.4
 - First version
