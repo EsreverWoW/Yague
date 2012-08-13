@@ -11,7 +11,7 @@ Description =
 	English = "GUI Library",
 }
 Author = "Baanano"
-Version = "0.4.4"
+Version = "0.4.4 r3"
 Email = "baanano.rift@gmail.com"
 Environment = "1.9"
 Dependencies =
