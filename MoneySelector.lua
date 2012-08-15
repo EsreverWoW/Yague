@@ -143,6 +143,7 @@ function PublicInterface.MoneySelector(name, parent)
 					nextInput:SetKeyFocus(true)
 				else
 					bMoneySelector:SetKeyFocus(true)
+					bMoneySelector:SetKeyFocus(false)
 				end
 			end
 		end
@@ -150,6 +151,7 @@ function PublicInterface.MoneySelector(name, parent)
 		function input.Event:KeyFocusGain()
 			if not enabled then
 				bMoneySelector:SetKeyFocus(true)
+				bMoneySelector:SetKeyFocus(false)
 			end
 		end
 	end
@@ -206,6 +208,7 @@ function PublicInterface.MoneySelector(name, parent)
 		enabled = newEnabled and true or false
 		if not enabled and (silverInput:GetKeyFocus() or goldInput:GetKeyFocus() or platinumInput:GetKeyFocus()) then
 			bMoneySelector:SetKeyFocus(true)
+			bMoneySelector:SetKeyFocus(false)
 		end
 	end
 	

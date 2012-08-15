@@ -1,3 +1,6 @@
+	r4
+- Fixed bug in MoneySelector that made the keyboard unusable
+
 	r3
 - Added callback to SetData method of the DataGrid control (to be called when completed)
 
