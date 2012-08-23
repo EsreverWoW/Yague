@@ -1,3 +1,6 @@
+	r5
+- Added Popup Manager	
+
 	r4
 - Fixed bug in MoneySelector that made the keyboard unusable
 
