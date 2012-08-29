@@ -11,7 +11,7 @@ Description =
 	English = "GUI Library",
 }
 Author = "Baanano"
-Version = "0.4.4 r5"
+Version = "0.4.4 r6"
 Email = "baanano.rift@gmail.com"
 Environment = "1.9"
 Dependencies =
@@ -37,4 +37,5 @@ RunOnStartup =
 	"Window.lua",
 	"TabControl.lua",
 	"PopupManager.lua",
+	"Popup.lua",
 }

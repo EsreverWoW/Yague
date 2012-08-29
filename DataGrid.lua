@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Data display                                                                                                                                    *
 -- ***************************************************************************************************************************************************
+-- * 0.4.4 / 2012.08.28 / Baanano: TextCellType's FontSize can be a function too now                                                                 *
 -- * 0.4.1 / 2012.07.18 / Baanano: Rewritten                                                                                                         *
 -- ***************************************************************************************************************************************************
 
@@ -78,7 +79,7 @@ local function TextCellType(name, parent)
 		if extra and extra.Formatter == "date" and type(value) == "number" then
 			text = ODate("%a %X", value)
 		elseif extra and type(extra.Formatter) == "function" then
-			text = extra.Formatter(value)
+			text = extra.Formatter(value, key)
 		else
 			text = tostring(value)
 		end
@@ -86,6 +87,8 @@ local function TextCellType(name, parent)
 		
 		if extra and type(extra.FontSize) == "number" then
 			self:SetFontSize(extra.FontSize)
+		elseif extra and type(extra.FontSize) == "function" then
+			self:SetFontSize(extra.FontSize(value, key))
 		end
 		
 		-- Apply alignment
@@ -102,7 +105,7 @@ local function TextCellType(name, parent)
 		if extra and type(extra.Color) == "table" then
 			self:SetFontColor(unpack(extra.Color))
 		elseif extra and type(extra.Color) == "function" then
-			self:SetFontColor(unpack(extra.Color(value)))
+			self:SetFontColor(unpack(extra.Color(value, key)))
 		end
 	end
 	
@@ -136,7 +139,6 @@ function PublicInterface.DataGrid(name, parent)
 	local paddings = { left = 0, top = 0, right = 0, bottom = 0 }
 	local rowHeight, rowMargin = ROW_DEFAULT_HEIGHT, ROW_DEFAULT_MARGIN
 	local unselectedRowBackgroundColorSelector, selectedRowBackgroundColorSelector = ROW_DEFAULT_BACKGROUND_COLOR, ROW_DEFAULT_BACKGROUND_COLOR
-	-- TODO RowBackgroundTexture
 	
 	local rows = {}
 	local numDisplayedRows = 0
@@ -498,6 +500,10 @@ function PublicInterface.DataGrid(name, parent)
 	
 	function bDataGrid:GetContent()
 		return externalPanelContent
+	end
+	
+	function bDataGrid:GetInternalContent()
+		return internalPanelContent
 	end
 	
 	function bDataGrid:GetPadding()

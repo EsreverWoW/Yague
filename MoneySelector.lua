@@ -179,14 +179,20 @@ function PublicInterface.MoneySelector(name, parent)
 
 	secretLabel:SetVisible(false)
 
-	platinumTexture:SetTextureAsync(addonID, "Textures/CoinPlatinum.png")
-	platinumTexture:SetPoint("BOTTOMRIGHT", platinumPanel:GetContent(), "BOTTOMRIGHT", 0, 0)
+	platinumTexture:SetPoint("BOTTOMRIGHT", platinumPanel:GetContent(), "BOTTOMRIGHT", 0, -2)
+	platinumTexture:SetWidth(16)
+	platinumTexture:SetHeight(16)
+	platinumTexture:SetTextureAsync("Rift", "coins_platinum.png.dds")		
 	
-	goldTexture:SetTextureAsync(addonID, "Textures/CoinGold.png")
-	goldTexture:SetPoint("BOTTOMRIGHT", goldPanel:GetContent(), "BOTTOMRIGHT", 0, 0)
+	goldTexture:SetPoint("BOTTOMRIGHT", goldPanel:GetContent(), "BOTTOMRIGHT", 0, -2)
+	goldTexture:SetWidth(16)
+	goldTexture:SetHeight(16)
+	goldTexture:SetTextureAsync("Rift", "coins_gold.png.dds")	
 	
-	silverTexture:SetTextureAsync(addonID, "Textures/CoinSilver.png")
-	silverTexture:SetPoint("BOTTOMRIGHT", silverPanel:GetContent(), "BOTTOMRIGHT", 0, 0)
+	silverTexture:SetPoint("BOTTOMRIGHT", silverPanel:GetContent(), "BOTTOMRIGHT", 0, -2)
+	silverTexture:SetWidth(16)
+	silverTexture:SetHeight(16)
+	silverTexture:SetTextureAsync("Rift", "coins_silver.png.dds")
 
 	platinumInput:SetPoint("CENTERRIGHT", platinumPanel:GetContent(), "CENTERRIGHT", -12, 1)
 	platinumInput:SetText("")

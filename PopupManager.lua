@@ -89,7 +89,6 @@ function PublicInterface.PopupManager(name, parent)
 			end
 			
 			if not popup then
-				-- TODO Use Popup border
 				popup = popupConstructors[id](mainFrame)
 				popup:SetPoint("CENTER", mainFrame, "CENTER", #popupPool[id] % 10, #popupPool[id] % 10)
 				TInsert(popupPool[id], popup)

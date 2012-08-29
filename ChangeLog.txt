@@ -1,3 +1,10 @@
+	r6
+- Added Popup control	
+- Slightly changed color schemas to get better contrast
+- Switched coin textures to those used by RIFT
+- Added access path to the inner panel of the DataGrid control
+- Added option to change FontSize for Text Cells via function
+
 	r5
 - Added Popup Manager	
 
