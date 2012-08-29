@@ -32,13 +32,19 @@ function PublicInterface.MoneyDisplay(name, parent)
 	platinumText:SetPoint("CENTERRIGHT", bMoneyDisplay, "CENTERRIGHT", -92, 0)
 	
 	silverTexture:SetPoint("CENTERRIGHT", bMoneyDisplay, "CENTERRIGHT", 0, 0)
-	silverTexture:SetTextureAsync(addonID, "Textures/CoinSilver.png")
+	silverTexture:SetWidth(16)
+	silverTexture:SetHeight(16)
+	silverTexture:SetTextureAsync("Rift", "coins_silver.png.dds")
 	
 	goldTexture:SetPoint("CENTERRIGHT", bMoneyDisplay, "CENTERRIGHT", -38, 0)
-	goldTexture:SetTextureAsync(addonID, "Textures/CoinGold.png")
+	goldTexture:SetWidth(16)
+	goldTexture:SetHeight(16)
+	goldTexture:SetTextureAsync("Rift", "coins_gold.png.dds")	
 	
 	platinumTexture:SetPoint("CENTERRIGHT", bMoneyDisplay, "CENTERRIGHT", -76, 0)
-	platinumTexture:SetTextureAsync(addonID, "Textures/CoinPlatinum.png")
+	platinumTexture:SetWidth(16)
+	platinumTexture:SetHeight(16)
+	platinumTexture:SetTextureAsync("Rift", "coins_platinum.png.dds")	
 	
 	local value = 0
 	
