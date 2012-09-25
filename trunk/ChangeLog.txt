@@ -1,3 +1,6 @@
+	r7
+- Fixed bug in DataGrid control
+
 	r6
 - Added Popup control	
 - Slightly changed color schemas to get better contrast

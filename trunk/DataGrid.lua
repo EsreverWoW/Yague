@@ -692,7 +692,7 @@ function PublicInterface.DataGrid(name, parent)
 
 			local ordering = filterOrderings[orderColumn] or filterKeyOrdering
 			if firstKey and data[firstKey] and not filterKeys[firstKey] then
-				self:SetSelectedKey(firstKey)
+				bDataGrid:SetSelectedKey(firstKey)
 				return
 			elseif lastIndex then
 				lastIndex = MMax(MMin(lastIndex, #ordering), 1)
@@ -701,7 +701,7 @@ function PublicInterface.DataGrid(name, parent)
 			end
 			
 			if orderReverse then lastIndex = #ordering - lastIndex + 1 end
-			self:SetSelectedKey(ordering[lastIndex])
+			bDataGrid:SetSelectedKey(ordering[lastIndex])
 			
 			if type(callback) == "function" then callback() end
 		end
