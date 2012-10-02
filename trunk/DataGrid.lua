@@ -11,13 +11,13 @@ local addonInfo, InternalInterface = ...
 local addonID = addonInfo.identifier
 local PublicInterface = _G[addonID]
 
-local CYield = coroutine.yield
+local CreateTask = LibScheduler.CreateTask
 local MCeil = math.ceil
 local MFloor = math.floor
 local MMax = math.max
 local MMin = math.min
 local Panel = PublicInterface.Panel
-local QueueTask = InternalInterface.Scheduler.QueueTask
+local Release = LibScheduler.Release
 local ShadowedText = PublicInterface.ShadowedText
 local TInsert = table.insert
 local TRemove = table.remove
@@ -651,7 +651,7 @@ function PublicInterface.DataGrid(name, parent)
 		return ret
 	end
 	
-	function bDataGrid:SetData(datum, firstKey, callback)
+	function bDataGrid:SetData(datum, firstKey, callback, immediate)
 		local lastIndex = GetSelectedIndex()
 		local lastScrollbarPosition = verticalScrollBar:GetPosition()
 		firstKey = firstKey or selectedKey
@@ -670,10 +670,10 @@ function PublicInterface.DataGrid(name, parent)
 		local function CreateOrderings()
 			for columnID in pairs(columns) do
 				CreateOrdering(columnID, datum)
-				CYield()
+				Release()
 			end
 			
-			CYield()
+			Release()
 			
 			for key in pairs(datum) do 
 				TInsert(keyOrdering, key)
@@ -706,7 +706,12 @@ function PublicInterface.DataGrid(name, parent)
 			if type(callback) == "function" then callback() end
 		end
 		
-		QueueTask(CreateOrderings, EndSetData)
+		if immediate then
+			CreateOrderings()
+			EndSetData()
+		else
+			CreateTask(CreateOrderings, EndSetData)
+		end
 	end
 	
 	function bDataGrid:GetSelectedData()
