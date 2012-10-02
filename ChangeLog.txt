@@ -1,3 +1,7 @@
+	r8
+- Started using LibScheduler
+- DataGrid's SetData now accepts an 'immediate' parameter
+
 	r7
 - Fixed bug in DataGrid control
 
