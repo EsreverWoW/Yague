@@ -28,7 +28,7 @@ function PublicInterface.Popup(name, parent)
 	local borderLeft = UICreateFrame("Texture", borderFrame:GetName() .. ".BorderLeft", borderFrame)
 	local borderRight = UICreateFrame("Texture", borderFrame:GetName() .. ".BorderRight", borderFrame)
 	
-	local contentFrame = UI.CreateFrame("Mask", mainFrame:GetName() .. ".Content", mainFrame)
+	local contentFrame = UI.CreateFrame("Frame", mainFrame:GetName() .. ".Content", mainFrame)
 
 	backdropFrame:SetPoint("TOPLEFT", mainFrame, "TOPLEFT", 5, 5)
 	backdropFrame:SetPoint("BOTTOMRIGHT", mainFrame, "BOTTOMRIGHT", -5, -5)
