@@ -693,6 +693,7 @@ function PublicInterface.DataGrid(name, parent)
 			local ordering = filterOrderings[orderColumn] or filterKeyOrdering
 			if firstKey and data[firstKey] and not filterKeys[firstKey] then
 				bDataGrid:SetSelectedKey(firstKey)
+				if type(callback) == "function" then callback() end
 				return
 			elseif lastIndex then
 				lastIndex = MMax(MMin(lastIndex, #ordering), 1)

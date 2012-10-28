@@ -1,3 +1,6 @@
+	r9
+- Bugfixed Datagrid and Popup controls	
+
 	r8
 - Started using LibScheduler
 - DataGrid's SetData now accepts an 'immediate' parameter
