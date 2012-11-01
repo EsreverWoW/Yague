@@ -1,3 +1,6 @@
+	Beta 0.4.4 RC1
+- Tagged as Beta
+
 	r9
 - Bugfixed Datagrid and Popup controls	
 
