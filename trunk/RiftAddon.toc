@@ -11,9 +11,9 @@ Description =
 	English = "GUI Library",
 }
 Author = "Baanano"
-Version = "0.4.4 RC1"
+Version = "0.4.4 RC3"
 Email = "baanano.rift@gmail.com"
-Environment = "1.11"
+Environment = "2.0"
 Dependencies =
 {
 	LibAsyncTextures = { "required", "before", },
