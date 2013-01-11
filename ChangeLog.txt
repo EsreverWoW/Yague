@@ -1,3 +1,9 @@
+	Beta 0.4.4 RC4
+- Reduced peak CPU usage of the DataGrid control
+- Added optional loading bars to the DataGrid control
+- Added option to Dropdown control to unfold upwards
+- Updated to RIFT 2.1	
+
 	Beta 0.4.4 RC3
 - Updated to RIFT 2.0
 	

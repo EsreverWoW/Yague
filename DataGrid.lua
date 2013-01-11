@@ -12,7 +12,11 @@ local addonID = addonInfo.identifier
 local PublicInterface = _G[addonID]
 
 local CreateTask = LibScheduler.CreateTask
+local ESUBegin = Event.System.Update.Begin
+local ITFrame = Inspect.Time.Frame
+local ITReal = Inspect.Time.Real
 local MCeil = math.ceil
+local MCos = math.cos
 local MFloor = math.floor
 local MMax = math.max
 local MMin = math.min
@@ -43,6 +47,7 @@ local ROW_DEFAULT_MARGIN = 0
 local ROW_DEFAULT_BACKGROUND_COLOR = { 0, 0, 0, 0 }
 local VERTICAL_SCROLLBAR_WIDTH = 20
 local VERTICAL_SCROLLBAR_HORIZONTAL_MARGIN = 2
+local PAGESIZE = 1000
 
 -- Cell Types
 local registeredCellTypes = {}
@@ -115,8 +120,6 @@ local function TextCellType(name, parent)
 end
 PublicInterface.RegisterCellType("Text", TextCellType)
 
-
-
 function PublicInterface.DataGrid(name, parent)
 	local bDataGrid = UICreateFrame("Frame", name, parent)
 	
@@ -126,6 +129,10 @@ function PublicInterface.DataGrid(name, parent)
 	local verticalScrollBar = UICreateFrame("RiftScrollbar", bDataGrid:GetName() .. ".VerticalScrollBar", externalPanel:GetContent())
 	local internalPanel = Panel(bDataGrid:GetName() .. ".InternalPanel", externalPanel:GetContent())
 	local internalPanelContent = internalPanel:GetContent()
+	local loadingOverlay = UICreateFrame("Frame", bDataGrid:GetName() .. ".LoadingOverlay", externalPanel:GetContent())
+	local loadingPanel = Panel(loadingOverlay:GetName() .. ".LoadingPanel", loadingOverlay)
+	local loadingPanelContent = loadingPanel:GetContent()
+	local loadingBar = UICreateFrame("Texture", loadingOverlay:GetName() .. ".LoadingBar", loadingPanelContent)
 	
 	externalPanel:SetAllPoints()
 
@@ -135,6 +142,19 @@ function PublicInterface.DataGrid(name, parent)
 	verticalScrollBar:SetPosition(0)
 
 	internalPanel:SetInvertedBorder(true)
+	
+	loadingOverlay:SetBackgroundColor(0, 0, 0, 0.5)
+	loadingOverlay:SetAllPoints(internalPanelContent)
+	loadingOverlay:SetLayer(internalPanel:GetLayer() + 1)
+	loadingOverlay:SetVisible(false)
+	
+	loadingPanel:SetPoint("CENTER", loadingOverlay, "CENTER")
+	loadingPanel:SetHeight(30)
+	loadingPanel:GetContent():SetBackgroundColor(0, 0, 0, 0.75)
+	
+	loadingBar:SetPoint("CENTER", loadingPanelContent, 0.5, 0.5)
+	loadingBar:SetTextureAsync("Rift", "bar_rogue.png.dds")
+	loadingBar:SetHeight(20)
 
 	local paddings = { left = 0, top = 0, right = 0, bottom = 0 }
 	local rowHeight, rowMargin = ROW_DEFAULT_HEIGHT, ROW_DEFAULT_MARGIN
@@ -161,10 +181,12 @@ function PublicInterface.DataGrid(name, parent)
 
 	local dataCount = 0
 	local filterCount = 0
-
 	
 	local orderColumn = nil
 	local orderReverse = false
+	
+	local loadingBarEnabled = false
+	local loadingOffset = MFloor(ITReal() * 1000000) % 1000
 
 	local function ResetLayout()
 		local internalPanelPaddingTop = paddings.top + (headerFrame:GetVisible() and HEADER_FRAME_HEIGHT or 0)
@@ -187,7 +209,7 @@ function PublicInterface.DataGrid(name, parent)
 		local header = UICreateFrame("Frame", headerFrame:GetName() .. "." .. columnID, headerFrame)
 	
 		local headerTitle = ShadowedText(header:GetName() .. ".Title", header)
-		local headerGlyph = UICreateFrame("Texture", header:GetName() .. ".Glyph", headerFrame)
+		local headerGlyph = UICreateFrame("Texture", header:GetName() .. ".Glyph", header)
 		
 		local reverseSort = false
 	
@@ -231,6 +253,10 @@ function PublicInterface.DataGrid(name, parent)
 				reverseSort = false
 			end
 		end
+		
+		function header:ChangeHeaderText(text)
+			headerTitle:SetText(text)
+		end
 	
 		return header
 	end
@@ -251,20 +277,22 @@ function PublicInterface.DataGrid(name, parent)
 		local totalWeight = 0
 		for _, columnID in ipairs(columnOrder) do
 			local columnData = columns[columnID]
-			if not skipNext and columnData.minSize <= remainingWidth then
-				columnWidths[columnID] = columnData.minSize
-				remainingWidth = remainingWidth - columnData.minSize
-				totalWeight = totalWeight + columnData.weightSize
-			else
-				columnWidths[columnID] = 0
-				skipNext = true
+			if not columnData.hidden then
+				if not skipNext and columnData.minSize <= remainingWidth then
+					columnWidths[columnID] = columnData.minSize
+					remainingWidth = remainingWidth - columnData.minSize
+					totalWeight = totalWeight + columnData.weightSize
+				else
+					columnWidths[columnID] = 0
+					skipNext = true
+				end
 			end
 		end
 		
 		if remainingWidth > 0 and totalWeight > 0 then
 			remainingWidth = remainingWidth / totalWeight
 			for columnID, columnData in pairs(columns) do
-				if columnWidths[columnID] > 0 then
+				if not columnData.hidden and columnWidths[columnID] > 0 then
 					columnWidths[columnID] = columnWidths[columnID] + remainingWidth * columnData.weightSize
 				end
 			end
@@ -275,53 +303,54 @@ function PublicInterface.DataGrid(name, parent)
 		remainingWidth = 0
 		for columnIndex, columnID in ipairs(columnOrder) do
 			local columnData = columns[columnID]
-		
-			if bDataGrid:GetHeadersVisible() then
-				columnHeaders[columnID]:ClearAll()
-				columnHeaders[columnID]:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", remainingWidth, 0)
-				columnHeaders[columnID]:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMLEFT", remainingWidth + columnWidths[columnID], 0)
-				columnHeaders[columnID]:ResetHeader()
-			end
-			
-			for index = 1, numDisplayedRows do
-				local row = rows[index]
-			
-				local dataIndex = index + MFloor(verticalScrollBar:GetPosition())
-				if orderReverse then dataIndex = #ordering - dataIndex + 1 end
+			if not columnData.hidden then
+				if bDataGrid:GetHeadersVisible() then
+					columnHeaders[columnID]:ClearAll()
+					columnHeaders[columnID]:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", remainingWidth, 0)
+					columnHeaders[columnID]:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMLEFT", remainingWidth + columnWidths[columnID], 0)
+					columnHeaders[columnID]:ResetHeader()
+				end
 				
-				local dataKey = ordering[dataIndex]
-				if dataKey then
-					row.cells[columnID]:ClearAll()
-					row.cells[columnID]:SetPoint("TOPLEFT", row, "TOPLEFT", remainingWidth, 0)
-					row.cells[columnID]:SetPoint("BOTTOMRIGHT", row, "BOTTOMLEFT", remainingWidth + columnWidths[columnID], 0)
-					row.cells[columnID]:SetValue(dataKey, not columnData.valueSelector and data[dataKey] or data[dataKey][columnData.valueSelector], columnWidths[columnID], columnData.extra)
-					if columnIndex == 1 then
-						local colorSelector = dataKey == selectedKey and selectedRowBackgroundColorSelector or unselectedRowBackgroundColorSelector
-						if type(colorSelector) == "function" then
-							colorSelector = colorSelector(dataKey, data[dataKey])
-						end
-						
-						row:SetBackgroundColor(unpack(colorSelector))
-						row:SetVisible(true)
-						
-						function row.Event:LeftClick()
-							bDataGrid:SetSelectedKey(dataKey)
-						end
-						
-						function row.Event:RightClick()
-							bDataGrid:SetSelectedKey(dataKey)
-							if bDataGrid.Event.RowRightClick then
-								bDataGrid.Event.RowRightClick(bDataGrid, dataKey, dataKey and data[dataKey] or nil)
+				for index = 1, numDisplayedRows do
+					local row = rows[index]
+				
+					local dataIndex = index + MFloor(verticalScrollBar:GetPosition())
+					if orderReverse then dataIndex = #ordering - dataIndex + 1 end
+					
+					local dataKey = ordering[dataIndex]
+					if dataKey then
+						row.cells[columnID]:ClearAll()
+						row.cells[columnID]:SetPoint("TOPLEFT", row, "TOPLEFT", remainingWidth, 0)
+						row.cells[columnID]:SetPoint("BOTTOMRIGHT", row, "BOTTOMLEFT", remainingWidth + columnWidths[columnID], 0)
+						row.cells[columnID]:SetValue(dataKey, not columnData.valueSelector and data[dataKey] or data[dataKey][columnData.valueSelector], columnWidths[columnID], columnData.extra)
+						if columnIndex == 1 then
+							local colorSelector = dataKey == selectedKey and selectedRowBackgroundColorSelector or unselectedRowBackgroundColorSelector
+							if type(colorSelector) == "function" then
+								colorSelector = colorSelector(dataKey, data[dataKey])
+							end
+							
+							row:SetBackgroundColor(unpack(colorSelector))
+							row:SetVisible(true)
+							
+							function row.Event:LeftClick()
+								bDataGrid:SetSelectedKey(dataKey)
+							end
+							
+							function row.Event:RightClick()
+								bDataGrid:SetSelectedKey(dataKey)
+								if bDataGrid.Event.RowRightClick then
+									bDataGrid.Event.RowRightClick(bDataGrid, dataKey, dataKey and data[dataKey] or nil)
+								end
 							end
 						end
-					end
-				else
-					if columnIndex == 1 then
-						row:SetVisible(false)
+					else
+						if columnIndex == 1 then
+							row:SetVisible(false)
+						end
 					end
 				end
+				remainingWidth = remainingWidth + columnWidths[columnID]
 			end
-			remainingWidth = remainingWidth + columnWidths[columnID]
 		end
 	end
 	
@@ -396,22 +425,17 @@ function PublicInterface.DataGrid(name, parent)
 	local function ResetColumns()
 		for columnID, columnData in pairs(columns) do
 			columnHeaders[columnID] = columnHeaders[columnID] or CreateColumnHeader(columnID)
+			columnHeaders[columnID]:ChangeHeaderText(columns[columnID].headerText or "")
 			for _, row in ipairs(rows) do
 				row.cells[columnID] = row.cells[columnID] or CreateCell(row, columnID, columnData.cellType)
 			end
 		end
 		for columnID, columnHeader in pairs(columnHeaders) do
-			if not columns[columnID] then
-				columnHeader:SetVisible(false)
-				columnHeaders[columnID] = nil
-			end
+			columnHeader:SetVisible(columns[columnID] and not columns[columnID].hidden and true or false)
 		end
 		for _, row in ipairs(rows) do
 			for columnID, cell in pairs(row.cells) do
-				if not columns[columnID] then
-					cell:SetVisible(false)
-					row.cells[columnID] = nil
-				end
+				cell:SetVisible(columns[columnID] and not columns[columnID].hidden and true or false)
 			end
 		end
 		RefreshCells()
@@ -439,7 +463,41 @@ function PublicInterface.DataGrid(name, parent)
 					return valueA < valueB
 				end
 		end
-		TSort(sortedData, function(a, b) return orderSelector(a, b, not valueSelector and datum[a] or datum[a][valueSelector], not valueSelector and datum[b] or datum[b][valueSelector]) end)
+		
+		local orderFunction = function(a, b) return orderSelector(a, b, not valueSelector and datum[a] or datum[a][valueSelector], not valueSelector and datum[b] or datum[b][valueSelector]) end
+		
+		local orderPages = {}
+		for index, key in ipairs(sortedData) do
+			local page = MFloor(index / PAGESIZE) + 1
+			orderPages[page] = orderPages[page] or {}
+			TInsert(orderPages[page], key)
+			Release()
+		end
+		
+		for _, page in pairs(orderPages) do
+			TSort(page, orderFunction)
+			Release()
+		end
+		
+		sortedData = {}
+		repeat
+			local minPageIndex = nil
+			
+			for pageIndex, page in pairs(orderPages) do
+				if #page > 0 then
+					if not minPageIndex or orderFunction(page[1], orderPages[minPageIndex][1]) then
+						minPageIndex = pageIndex
+					end
+				end
+			end
+			
+			if minPageIndex then
+				TInsert(sortedData, orderPages[minPageIndex][1])
+				TRemove(orderPages[minPageIndex], 1)
+			end
+			
+			Release()
+		until not minPageIndex		
 		
 		orderings[columnID] = sortedData
 		
@@ -453,7 +511,7 @@ function PublicInterface.DataGrid(name, parent)
 		if orderColumn == columnID then
 			orderColumn = nil
 			for columnID, columnData in pairs(columns) do
-				if columnData.orderSelector then
+				if columnData.orderSelector and not columnData.hidden then
 					orderColumn = columnID
 					orderReverse = false
 					break
@@ -484,7 +542,12 @@ function PublicInterface.DataGrid(name, parent)
 	function internalPanelContent.Event:Size()
 		ResetRows()
 		ResetColumns()
-	end	
+		loadingPanel:SetWidth(internalPanelContent:GetWidth() / 3)
+	end
+	
+	function loadingPanelContent.Event.Size()
+		loadingBar:SetWidth(loadingPanelContent:GetWidth() / 4)
+	end
 	
 	function internalPanelContent.Event:WheelForward()
 		local minRange = verticalScrollBar:GetRange()
@@ -566,7 +629,7 @@ function PublicInterface.DataGrid(name, parent)
 		RefreshCells()
 	end
 	
-	function bDataGrid:AddColumn(id, headerText, cellType, minSize, weightSize, valueSelector, orderSelector, extra)
+	function bDataGrid:AddColumn(id, headerText, cellType, minSize, weightSize, valueSelector, orderSelector, extra, hidden)
 		columns[id] =
 		{
 			headerText = headerText,
@@ -576,6 +639,7 @@ function PublicInterface.DataGrid(name, parent)
 			valueSelector = valueSelector,
 			orderSelector = orderSelector,
 			extra = extra,
+			hidden = hidden or nil,
 		}
 		TInsert(columnOrder, id)
 		if orderSelector then
@@ -584,20 +648,23 @@ function PublicInterface.DataGrid(name, parent)
 		ResetColumns()
 	end
 	
-	function bDataGrid:RemoveColumn(id)
-		columns[id] = nil
+	function bDataGrid:ModifyColumn(id, headerText, valueSelector, orderSelector, hidden)
+		if not id or not columns[id] then return end
 		
-		local columnIndex = nil
-		for index, columnID in ipairs(columnOrder) do
-			if id == columnID then
-				columnIndex = index
-				break
-			end
+		local hadOrderSelector = columns[id].orderSelector
+		
+		columns[id].headerText = headerText
+		columns[id].valueSelector = valueSelector
+		columns[id].orderSelector = orderSelector
+		columns[id].hidden = hidden or nil
+		
+		if hadOrderSelector and (not orderSelector or hidden) then
+			RemoveOrdering(id)
 		end
-		if columnIndex then
-			TRemove(columnOrder, columnIndex)
+		
+		if orderSelector then
+			CreateOrdering(id, data)
 		end
-		RemoveOrdering(id)
 		
 		ResetColumns()
 	end
@@ -627,7 +694,7 @@ function PublicInterface.DataGrid(name, parent)
 	end
 	
 	function bDataGrid:SetOrder(columnID, reverse)
-		if not columnID or not columns[columnID] or not columns[columnID].orderSelector then return end
+		if not columnID or not columns[columnID] or not columns[columnID].orderSelector or columns[columnID].hidden then return end
 		orderColumn = columnID
 		orderReverse = reverse and true or false
 		RefreshCells()
@@ -660,6 +727,10 @@ function PublicInterface.DataGrid(name, parent)
 		dataCount = 0
 		selectedKey = nil
 		
+		if loadingBarEnabled then
+			loadingOverlay:SetVisible(true)
+		end
+		
 		datum = datum or {}
 
 		orderings = {}
@@ -674,18 +745,54 @@ function PublicInterface.DataGrid(name, parent)
 			end
 			
 			Release()
-			
+
 			for key in pairs(datum) do 
 				TInsert(keyOrdering, key)
 				dataCount = dataCount + 1
+				Release()
 			end
-			TSort(keyOrdering)
+			
+			local orderFunction = function(a, b) return a < b end
+		
+			local orderPages = {}
+			for index, key in ipairs(keyOrdering) do
+				local page = MFloor(index / PAGESIZE) + 1
+				orderPages[page] = orderPages[page] or {}
+				TInsert(orderPages[page], key)
+				Release()
+			end
+		
+			for _, page in pairs(orderPages) do
+				TSort(page, orderFunction)
+				Release()
+			end
+		
+			keyOrdering = {}
+			repeat
+				local minPageIndex = nil
+			
+				for pageIndex, page in pairs(orderPages) do
+					if #page > 0 then
+						if not minPageIndex or orderFunction(page[1], orderPages[minPageIndex][1]) then
+							minPageIndex = pageIndex
+						end
+					end
+				end
+			
+				if minPageIndex then
+					TInsert(keyOrdering, orderPages[minPageIndex][1])
+					TRemove(orderPages[minPageIndex], 1)
+				end
+				Release()
+			until not minPageIndex		
 		end
 		
 		local function EndSetData()
 			data = datum
 
 			RefreshFilter()
+
+			loadingOverlay:SetVisible(false)
 			
 			local minRange, maxRange = verticalScrollBar:GetRange()
 			verticalScrollBar:SetPosition(MMin(MMax(lastScrollbarPosition, minRange), maxRange))
@@ -737,13 +844,34 @@ function PublicInterface.DataGrid(name, parent)
 			verticalScrollBar:SetPosition(selectedIndex - numDisplayedRows + 1)
 		end
 		
-		if selectedKey ~= previousKey then
+		if selectedKey == nil or selectedKey ~= previousKey then
 			RefreshCells()
 			if bDataGrid.Event.SelectionChanged then
 				bDataGrid.Event.SelectionChanged(bDataGrid, selectedKey, selectedKey and data[selectedKey] or nil)
 			end
 		end
 	end
+	
+	function bDataGrid:SetLoadingBarEnabled(enabled)
+		loadingBarEnabled = enabled and true or false
+	end
+	
+	function bDataGrid:ShowLoadingBar()
+		if loadingBarEnabled then
+			loadingOverlay:SetVisible(true)
+		end
+	end
+	
+	function bDataGrid:HideLoadingBar()
+		loadingOverlay:SetVisible(false)
+	end
+	
+	local function UpdateLoadingBar()
+		if loadingOverlay:GetVisible() then
+			loadingBar:SetPoint("CENTER", loadingPanelContent, (MCos(ITFrame() * 3 + loadingOffset) + 1) / 2, 0.5)
+		end
+	end
+	TInsert(ESUBegin, { UpdateLoadingBar, addonID, bDataGrid:GetName() .. ".ESUBegin" })
 	
 	PublicInterface.EventHandler(bDataGrid, { "SelectionChanged", "RowRightClick", })
 	
