@@ -135,6 +135,7 @@ function PublicInterface.Dropdown(name, parent)
 	local orderSelector = nil
 	local textSelector = nil
 	local colorSelector = nil
+	local reverseUnfold = false
 
 	local function GetTextAndColor(key, value)
 		local text = tostring(key)
@@ -287,6 +288,23 @@ function PublicInterface.Dropdown(name, parent)
 	
 	function bDropdown:SetColorSelector(color)
 		colorSelector = color
+	end
+	
+	function bDropdown:SetReverseUnfold(reverse)
+		reverse = reverse and true or false
+		if reverse ~= reverseUnfold then
+			reverseUnfold = reverse
+			
+			local formerHeight = dropdownPanel:GetHeight()
+			
+			dropdownPanel:ClearAll()
+			dropdownPanel:SetPoint(reverse and "BOTTOMLEFT" or "TOPLEFT", bDropdown, reverse and "TOPLEFT" or "BOTTOMLEFT")
+			dropdownPanel:SetPoint(reverse and "BOTTOMRIGHT" or "TOPRIGHT", bDropdown, reverse and "TOPRIGHT" or "BOTTOMRIGHT")
+			dropdownPanel:SetLayer(9999)
+			dropdownPanel:SetHeight(formerHeight)
+			
+			iconTexture:SetTextureAsync(addonID, reverse and "Textures/DropdownReverse.png" or "Textures/Dropdown.png")
+		end
 	end
 	
 	PublicInterface.EventHandler(bDropdown, { "SelectionChanged" })
