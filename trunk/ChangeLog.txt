@@ -1,3 +1,7 @@
+	Beta 0.4.4 RC5
+- Added ScrollableText control
+- Added Calendar control
+
 	Beta 0.4.4 RC4
 - Reduced peak CPU usage of the DataGrid control
 - Added optional loading bars to the DataGrid control
