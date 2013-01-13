@@ -117,7 +117,6 @@ local function CreateDayFrame(name, parent, evenAppearance)
 		
 		moreTexture:SetVisible(#events > 1)
 		
-		counter = 0
 		RefreshEvent()
 		
 		onSelect = selectFunction
