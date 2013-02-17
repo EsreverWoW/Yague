@@ -1,44 +1,19 @@
-	Beta 0.4.4 RC5
-- Added ScrollableText control
-- Added Calendar control
-
-	Beta 0.4.4 RC4
-- Reduced peak CPU usage of the DataGrid control
-- Added optional loading bars to the DataGrid control
+	Release 0.4.5
+- Added new controls:	
+ + Popup Manager	
+ + Popup
+ + ScrollableText
+ + Calendar
+- DataGrid changes:
+ + Added optional loading bars
+ + Reduced peak CPU usage when changing the data source
+ + SetData now accepts an 'immediate' parameter
+ + SetData now accepts a callback parameter (to be called when completed)
+ + Added option to change FontSize for Text Cells via function
+ + Fixed several bugs
 - Added option to Dropdown control to unfold upwards
-- Updated to RIFT 2.1	
-
-	Beta 0.4.4 RC3
-- Updated to RIFT 2.0
-	
-	Beta 0.4.4 RC1
-- Tagged as Beta
-
-	r9
-- Bugfixed Datagrid and Popup controls	
-
-	r8
-- Started using LibScheduler
-- DataGrid's SetData now accepts an 'immediate' parameter
-
-	r7
-- Fixed bug in DataGrid control
-
-	r6
-- Added Popup control	
-- Slightly changed color schemas to get better contrast
-- Switched coin textures to those used by RIFT
-- Added access path to the inner panel of the DataGrid control
-- Added option to change FontSize for Text Cells via function
-
-	r5
-- Added Popup Manager	
-
-	r4
 - Fixed bug in MoneySelector that made the keyboard unusable
-
-	r3
-- Added callback to SetData method of the DataGrid control (to be called when completed)
+- Switched coin textures to those used by RIFT
 
 	Release 0.4.4
 - First version
