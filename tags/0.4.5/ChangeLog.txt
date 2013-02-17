@@ -1,0 +1,19 @@
+	Release 0.4.5
+- Added new controls:	
+ + Popup Manager	
+ + Popup
+ + ScrollableText
+ + Calendar
+- DataGrid changes:
+ + Added optional loading bars
+ + Reduced peak CPU usage when changing the data source
+ + SetData now accepts an 'immediate' parameter
+ + SetData now accepts a callback parameter (to be called when completed)
+ + Added option to change FontSize for Text Cells via function
+ + Fixed several bugs
+- Added option to Dropdown control to unfold upwards
+- Fixed bug in MoneySelector that made the keyboard unusable
+- Switched coin textures to those used by RIFT
+
+	Release 0.4.4
+- First version
