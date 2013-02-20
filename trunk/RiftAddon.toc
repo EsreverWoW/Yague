@@ -11,7 +11,7 @@ Description =
 	English = "GUI Library",
 }
 Author = "Baanano"
-Version = "0.4.5"
+Version = "0.4.6 r17"
 Email = "baanano.rift@gmail.com"
 Environment = "2.1"
 Dependencies =
@@ -41,4 +41,5 @@ RunOnStartup =
 	"Popup.lua",
 	"ScrollableText.lua",
 	"Calendar.lua",
+	"AutocompleteTextfield.lua",
 }

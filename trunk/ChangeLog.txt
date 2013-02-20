@@ -1,3 +1,6 @@
+	r17
+- Added AutocompleteTextfield control	
+
 	Release 0.4.5
 - Added new controls:	
  + Popup Manager	
