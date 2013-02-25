@@ -1,3 +1,6 @@
+	r18
+- Added SetBarVisible method to the DataGrid control	
+
 	r17
 - Added AutocompleteTextfield control	
 
