@@ -866,6 +866,11 @@ function PublicInterface.DataGrid(name, parent)
 		loadingOverlay:SetVisible(false)
 	end
 	
+	function bDataGrid:SetBarVisible(visible)
+		verticalScrollBar:SetVisible(visible and true or false)
+		ResetLayout()
+	end
+	
 	local function UpdateLoadingBar()
 		if loadingOverlay:GetVisible() then
 			loadingBar:SetPoint("CENTER", loadingPanelContent, (MCos(ITFrame() * 3 + loadingOffset) + 1) / 2, 0.5)
