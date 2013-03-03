@@ -95,7 +95,7 @@ function PublicInterface.AutocompleteTextfield(name, parent)
 		textComplete:SetVisible(false)
 	end
 	
-	function textbox.Event:KeyDown(key)
+	function textbox.Event:KeyType(key)
 		local text = textbox:GetText()
 		if key == "\9" then
 			offset = offset + 1

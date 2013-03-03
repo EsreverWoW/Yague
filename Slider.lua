@@ -102,7 +102,7 @@ function PublicInterface.Slider(name, parent)
 		RepositionSlider()
 	end
 	
-	function textField.Event:KeyUp(key)
+	function textField.Event:KeyType(key)
 		if pseudoValuesLookup[SUpper(key)] then
 			currentValue = pseudoValuesLookup[SUpper(key)]
 			RepositionSlider()
