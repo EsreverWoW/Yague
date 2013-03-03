@@ -1,7 +1,7 @@
-	r18
+	Release 0.4.7
+- Updated to RIFT 2.2
+- Fixed broken Key events after RIFT 2.2 patch
 - Added SetBarVisible method to the DataGrid control	
-
-	r17
 - Added AutocompleteTextfield control	
 
 	Release 0.4.5

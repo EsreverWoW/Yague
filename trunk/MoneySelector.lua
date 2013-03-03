@@ -108,7 +108,7 @@ function PublicInterface.MoneySelector(name, parent)
 	local function AssignKeyEvents(input, minValue, maxValue, nextInput)
 		local lastText, lastCursor, ignoreChange
 		
-		function input.Event:KeyDown(key)
+		function input.Event:KeyType(key)
 			lastText = self:GetText()
 			lastCursor = self:GetCursor()
 			ignoreChange = not tonumber(key) and SByte(key) and SByte(key) ~= 8
@@ -138,7 +138,7 @@ function PublicInterface.MoneySelector(name, parent)
 		end
 		
 		function input.Event:KeyUp(key)
-			if key == "\9" or key == "\13" or key == "." or key == " " then
+			if key == "Tab" or key == "Return" or key == "Period" or key == "Space" or key == "Numpad Decimal" then
 				if nextInput then
 					nextInput:SetKeyFocus(true)
 				else
