@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Data display                                                                                                                                    *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.17 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.4 / 2012.08.28 / Baanano: TextCellType's FontSize can be a function too now                                                                 *
 -- * 0.4.1 / 2012.07.18 / Baanano: Rewritten                                                                                                         *
 -- ***************************************************************************************************************************************************
@@ -11,8 +12,8 @@ local addonInfo, InternalInterface = ...
 local addonID = addonInfo.identifier
 local PublicInterface = _G[addonID]
 
+local CEAttach = Command.Event.Attach
 local CreateTask = LibScheduler.CreateTask
-local ESUBegin = Event.System.Update.Begin
 local ITFrame = Inspect.Time.Frame
 local ITReal = Inspect.Time.Real
 local MCeil = math.ceil
@@ -226,17 +227,20 @@ function PublicInterface.DataGrid(name, parent)
 			headerGlyph:SetPoint("CENTERLEFT", header, "CENTERRIGHT", - HEADER_SORT_GLYPH_WIDTH, 0)
 			headerGlyph:SetPoint("CENTERRIGHT", header, "CENTERRIGHT", 0, 0)
 
-			function header.Event:MouseIn()
-				headerTitle:SetFontColor(unpack(HEADER_SORT_IN_COLOR))
-			end
+			header:EventAttach(Event.UI.Input.Mouse.Cursor.In,
+				function()
+					headerTitle:SetFontColor(unpack(HEADER_SORT_IN_COLOR))
+				end, header:GetName() .. "OnMouseIn")
 			
-			function header.Event:MouseOut()
-				headerTitle:SetFontColor(unpack(HEADER_SORT_OUT_COLOR))
-			end
+			header:EventAttach(Event.UI.Input.Mouse.Cursor.Out,
+				function()
+					headerTitle:SetFontColor(unpack(HEADER_SORT_OUT_COLOR))
+				end, header:GetName() .. "OnMouseOut")
 			
-			function header.Event:LeftClick()
-				bDataGrid:SetOrder(columnID, reverseSort)
-			end
+			header:EventAttach(Event.UI.Input.Mouse.Left.Click,
+				function()
+					bDataGrid:SetOrder(columnID, reverseSort)
+				end, header:GetName() .. "OnLeftClick")
 		else
 			headerTitle:SetPoint("CENTER", header, "CENTER", 0, 0)
 		end
@@ -332,16 +336,18 @@ function PublicInterface.DataGrid(name, parent)
 							row:SetBackgroundColor(unpack(colorSelector))
 							row:SetVisible(true)
 							
-							function row.Event:LeftClick()
-								bDataGrid:SetSelectedKey(dataKey)
-							end
+							row:EventAttach(Event.UI.Input.Mouse.Left.Click,
+								function()
+									bDataGrid:SetSelectedKey(dataKey)
+								end, row:GetName() .. ".OnLeftClick")
 							
-							function row.Event:RightClick()
-								bDataGrid:SetSelectedKey(dataKey)
-								if bDataGrid.Event.RowRightClick then
-									bDataGrid.Event.RowRightClick(bDataGrid, dataKey, dataKey and data[dataKey] or nil)
-								end
-							end
+							row:EventAttach(Event.UI.Input.Mouse.Right.Click,
+								function()
+									bDataGrid:SetSelectedKey(dataKey)
+									if bDataGrid.Event.RowRightClick then
+										bDataGrid.Event.RowRightClick(bDataGrid, dataKey, dataKey and data[dataKey] or nil)
+									end
+								end, row:GetName() .. ".OnRightClick")
 						end
 					else
 						if columnIndex == 1 then
@@ -534,30 +540,35 @@ function PublicInterface.DataGrid(name, parent)
 	end
 	
 	
-	
-	function verticalScrollBar.Event:ScrollbarChange()
-		RefreshCells()
-	end
-	
-	function internalPanelContent.Event:Size()
-		ResetRows()
-		ResetColumns()
-		loadingPanel:SetWidth(internalPanelContent:GetWidth() / 3)
-	end
-	
-	function loadingPanelContent.Event.Size()
-		loadingBar:SetWidth(loadingPanelContent:GetWidth() / 4)
-	end
-	
-	function internalPanelContent.Event:WheelForward()
-		local minRange = verticalScrollBar:GetRange()
-		verticalScrollBar:SetPosition(MMax(verticalScrollBar:GetPosition() - 1, minRange))
-	end
 
-	function internalPanelContent.Event:WheelBack()
-		local _, maxRange = verticalScrollBar:GetRange()
-		verticalScrollBar:SetPosition(MMin(verticalScrollBar:GetPosition() + 1, maxRange))
-	end	
+	verticalScrollBar:EventAttach(Event.UI.Scrollbar.Change,	
+		function()
+			RefreshCells()
+		end, verticalScrollBar:GetName() .. ".OnScrollbarChange")
+	
+	internalPanelContent:EventAttach(Event.UI.Layout.Size,
+		function()
+			ResetRows()
+			ResetColumns()
+			loadingPanel:SetWidth(internalPanelContent:GetWidth() / 3)
+		end, internalPanelContent:GetName() .. ".OnSize")
+	
+	loadingPanelContent:EventAttach(Event.UI.Layout.Size,
+		function()
+			loadingBar:SetWidth(loadingPanelContent:GetWidth() / 4)
+		end, loadingPanelContent:GetName() .. ".OnSize")
+	
+	internalPanelContent:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+		function()
+			local minRange = verticalScrollBar:GetRange()
+			verticalScrollBar:SetPosition(MMax(verticalScrollBar:GetPosition() - 1, minRange))
+		end, internalPanelContent:GetName() .. ".OnWheelForward")
+
+	internalPanelContent:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+		function()
+			local _, maxRange = verticalScrollBar:GetRange()
+			verticalScrollBar:SetPosition(MMin(verticalScrollBar:GetPosition() + 1, maxRange))
+		end, internalPanelContent:GetName() .. ".OnWheelBack")
 
 	
 	
@@ -876,7 +887,7 @@ function PublicInterface.DataGrid(name, parent)
 			loadingBar:SetPoint("CENTER", loadingPanelContent, (MCos(ITFrame() * 3 + loadingOffset) + 1) / 2, 0.5)
 		end
 	end
-	TInsert(ESUBegin, { UpdateLoadingBar, addonID, bDataGrid:GetName() .. ".ESUBegin" })
+	CEAttach(Event.System.Update.Begin, UpdateLoadingBar, bDataGrid:GetName() .. ".OnUpdate")
 	
 	PublicInterface.EventHandler(bDataGrid, { "SelectionChanged", "RowRightClick", })
 	

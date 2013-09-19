@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Money frame                                                                                                                                     *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.19 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.1 / 2012.07.16 / Baanano: Rewritten                                                                                                         *
 -- ***************************************************************************************************************************************************
 
@@ -95,49 +96,56 @@ function PublicInterface.Slider(name, parent)
 		end
 	end
 
-	function slider.Event:SliderChange()
-		local newPosition = MFloor(self:GetPosition())
-		if newPosition == currentValue then return end
-		currentValue = MMax(MMin(newPosition, maxValue + #postValues), minValue - #preValues)
-		RepositionSlider()
-	end
-	
-	function textField.Event:KeyType(key)
-		if pseudoValuesLookup[SUpper(key)] then
-			currentValue = pseudoValuesLookup[SUpper(key)]
+	slider:EventAttach(Event.UI.Slider.Change,
+		function(self)
+			local newPosition = MFloor(self:GetPosition())
+			if newPosition == currentValue then return end
+			currentValue = MMax(MMin(newPosition, maxValue + #postValues), minValue - #preValues)
 			RepositionSlider()
+		end, slider:GetName() .. ".OnSliderChange")
+	
+	textField:EventAttach(Event.UI.Input.Key.Type,
+		function(self, h, key)
+			if pseudoValuesLookup[SUpper(key)] then
+				currentValue = pseudoValuesLookup[SUpper(key)]
+				RepositionSlider()
+				self:SetSelection(0, SLen(self:GetText()))
+			end
+		end, textField:GetName() .. ".OnKeyType")
+	
+	textField:EventAttach(Event.UI.Textfield.Change,
+		function(self)
+			local newPosition = tonumber(self:GetText() ~= "" and self:GetText() or "0")
+			newPosition = newPosition and MFloor(newPosition)
+			if newPosition and newPosition ~= currentValue then
+				currentValue = MMax(MMin(newPosition, maxValue), minValue)
+			end
+			RepositionSlider()
+		end, textField:GetName() .. ".OnTextfieldChange")
+
+	textField:EventAttach(Event.UI.Input.Key.Focus.Gain,
+		function(self)
 			self:SetSelection(0, SLen(self:GetText()))
-		end
-	end
+		end, textField:GetName() .. ".OnKeyFocusGain")
+
+	innerPanel:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			textField:SetKeyFocus(true)
+		end, innerPanel:GetName() .. ".OnLeftClick")
 	
-	function textField.Event:TextfieldChange()
-		local newPosition = tonumber(self:GetText() ~= "" and self:GetText() or "0")
-		newPosition = newPosition and MFloor(newPosition)
-		if newPosition and newPosition ~= currentValue then
-			currentValue = MMax(MMin(newPosition, maxValue), minValue)
-		end
-		RepositionSlider()
-	end
+	bSlider:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+		function()
+			if slider:GetPosition() + 1 <= maxValue + #postValues then
+				slider:SetPosition(slider:GetPosition() + 1)
+			end
+		end, bSlider:GetName() .. ".OnWheelForward")
 
-	function textField.Event:KeyFocusGain()
-		self:SetSelection(0, SLen(self:GetText()))
-	end
-
-	function innerPanel.Event:LeftClick()
-		textField:SetKeyFocus(true)
-	end
-	
-	function bSlider.Event:WheelForward()
-		if slider:GetPosition() + 1 <= maxValue + #postValues then
-			slider:SetPosition(slider:GetPosition() + 1)
-		end
-	end
-
-	function bSlider.Event:WheelBack()
-		if slider:GetPosition() - 1 >= minValue - #preValues then
-			slider:SetPosition(slider:GetPosition() - 1)
-		end
-	end
+	bSlider:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+		function()
+			if slider:GetPosition() - 1 >= minValue - #preValues then
+				slider:SetPosition(slider:GetPosition() - 1)
+			end
+		end, bSlider:GetName() .. ".OnWheelBack")
 
 	
 	

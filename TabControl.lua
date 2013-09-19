@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Tab control                                                                                                                                     *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.19 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.1 / 2012.07.30 / Baanano: First version                                                                                                     *
 -- ***************************************************************************************************************************************************
 
@@ -80,19 +81,22 @@ function PublicInterface.TabControl(name, parent)
 			end
 		end
 		
-		function header.Event:MouseIn()
-			headerText:SetFontSize(headerEnabled and TITLE_FONTSIZE_MOUSEOVER or TITLE_FONTSIZE_NEUTRAL)
-		end
+		header:EventAttach(Event.UI.Input.Mouse.Cursor.In,
+			function()
+				headerText:SetFontSize(headerEnabled and TITLE_FONTSIZE_MOUSEOVER or TITLE_FONTSIZE_NEUTRAL)
+			end, header:GetName() .. ".OnMouseIn")
 		
-		function header.Event:MouseOut()
-			headerText:SetFontSize(TITLE_FONTSIZE_NEUTRAL)
-		end
+		header:EventAttach(Event.UI.Input.Mouse.Cursor.Out,
+			function()
+				headerText:SetFontSize(TITLE_FONTSIZE_NEUTRAL)
+			end, header:GetName() .. ".OnMouseOut")
 		
-		function header.Event:LeftClick()
-			if headerTabID and headerEnabled then
-				bTabControl:SetSelectedTab(headerTabID)
-			end
-		end
+		header:EventAttach(Event.UI.Input.Mouse.Left.Click,
+			function()
+				if headerTabID and headerEnabled then
+					bTabControl:SetSelectedTab(headerTabID)
+				end
+			end, header:GetName() .. ".OnLeftClick")
 		
 		TInsert(headers, header)
 		

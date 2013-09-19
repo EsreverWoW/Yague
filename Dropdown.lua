@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Dropdown selector frame                                                                                                                         *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.17 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.1 / 2012.07.15 / Baanano: Rewritten                                                                                                         *
 -- ***************************************************************************************************************************************************
 
@@ -47,6 +48,8 @@ function PublicInterface.Dropdown(name, parent)
 		local valueTexture = UICreateFrame("Texture", valueFrame:GetName() .. ".ValueTexture", valueFrame)
 		local valueBackground = UICreateFrame("Frame", valueFrame:GetName() .. ".ValueBackground", valueFrame)
 		local valueText = UICreateFrame("Text", valueFrame:GetName() .. ".ValueText", valueBackground)
+		
+		local valueFrameKey = nil
 
 		valueFrame:SetPoint("TOPLEFT", dropdownFrame, "TOPLEFT", 0, (index - 1) * (VALUE_HEIGHT + VALUE_MARGIN * 2 +  VALUE_BORDER * 2) + VALUE_MARGIN)
 		valueFrame:SetPoint("BOTTOMRIGHT", dropdownFrame, "TOPRIGHT", 0, index * (VALUE_HEIGHT + VALUE_MARGIN * 2 +  VALUE_BORDER * 2) - VALUE_MARGIN)
@@ -66,18 +69,30 @@ function PublicInterface.Dropdown(name, parent)
 		valueText:SetFontSize(14)
 		valueText:SetFontColor(unpack(DEFAULT_COLOR))
 
-		function valueFrame.Event:MouseIn()
-			self:SetBackgroundColor(1, 0.75, 0, 1)
-			valueTexture:SetVisible(true)
-		end
+		valueFrame:EventAttach(Event.UI.Input.Mouse.Cursor.In,
+			function()
+				valueFrame:SetBackgroundColor(1, 0.75, 0, 1)
+				valueTexture:SetVisible(true)
+			end, valueFrame:GetName() .. ".OnMouseIn")
 		
-		function valueFrame.Event:MouseOut()
-			self:SetBackgroundColor(0, 0, 0, 1)
-			valueTexture:SetVisible(false)
-		end
+		valueFrame:EventAttach(Event.UI.Input.Mouse.Cursor.Out,
+			function()
+				valueFrame:SetBackgroundColor(0, 0, 0, 1)
+				valueTexture:SetVisible(false)
+			end, valueFrame:GetName() .. ".OnMouseOut")
+		
+		valueFrame:EventAttach(Event.UI.Input.Mouse.Left.Click,
+			function()
+				if valueFrameKey then
+					bDropdown:SetSelectedKey(valueFrameKey)
+					dropdownPanel:SetVisible(false)
+				end
+			end, valueFrame:GetName() .. ".OnLeftClick")
 		
 		function valueFrame:SetValue(key, text, textColor)
-			self:SetVisible(key and true or false)
+			valueFrameKey = key
+		
+			valueFrame:SetVisible(key and true or false)
 
 			valueText:SetText(text or "")
 
@@ -85,11 +100,6 @@ function PublicInterface.Dropdown(name, parent)
 				valueText:SetFontColor(unpack(textColor))
 			else
 				valueText:SetFontColor(unpack(DEFAULT_COLOR))
-			end
-			
-			function self.Event:LeftClick()
-				bDropdown:SetSelectedKey(key)
-				dropdownPanel:SetVisible(false)
 			end
 		end
 		
@@ -175,30 +185,34 @@ function PublicInterface.Dropdown(name, parent)
 		end
 	end
 	
-	function iconTexture.Event:LeftClick()
-		if not enabled then return end
-		dropdownPanel:SetVisible(not dropdownPanel:GetVisible())
-	end
+	iconTexture:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			if not enabled then return end
+			dropdownPanel:SetVisible(not dropdownPanel:GetVisible())
+		end, iconTexture:GetName() .. ".OnLeftClick")
 	
-	function dropdownScrollbar.Event:ScrollbarChange()
-		if self:GetPosition() ~= MFloor(self:GetPosition()) then
-			self:SetPosition(MFloor(self:GetPosition()))
-		else
-			RepaintValueFrames(self:GetPosition())
-		end
-	end
+	dropdownScrollbar:EventAttach(Event.UI.Scrollbar.Change,
+		function()
+			if dropdownScrollbar:GetPosition() ~= MFloor(dropdownScrollbar:GetPosition()) then
+				dropdownScrollbar:SetPosition(MFloor(dropdownScrollbar:GetPosition()))
+			else
+				RepaintValueFrames(dropdownScrollbar:GetPosition())
+			end
+		end, dropdownScrollbar:GetName() .. ".OnScrollbarChange")
 	
-	function dropdownContent.Event:WheelForward()
-		if dropdownScrollbar:GetEnabled() and dropdownScrollbar:GetPosition() > 0 then
-			dropdownScrollbar:SetPosition(MFloor(dropdownScrollbar:GetPosition()) - 1)
-		end
-	end
+	dropdownContent:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+		function()
+			if dropdownScrollbar:GetEnabled() and dropdownScrollbar:GetPosition() > 0 then
+				dropdownScrollbar:SetPosition(MFloor(dropdownScrollbar:GetPosition()) - 1)
+			end
+		end, dropdownContent:GetName() .. ".OnWheelForward")
 	
-	function dropdownContent.Event:WheelBack()
-		if dropdownScrollbar:GetEnabled() and MFloor(dropdownScrollbar:GetPosition()) < #orderedKeys - MAX_VALUES  then
-			dropdownScrollbar:SetPosition(MFloor(dropdownScrollbar:GetPosition()) + 1)
-		end
-	end
+	dropdownContent:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+		function()
+			if dropdownScrollbar:GetEnabled() and MFloor(dropdownScrollbar:GetPosition()) < #orderedKeys - MAX_VALUES  then
+				dropdownScrollbar:SetPosition(MFloor(dropdownScrollbar:GetPosition()) + 1)
+			end
+		end, dropdownContent:GetName() .. ".OnWheelBack")
 	
 	function bDropdown:GetEnabled()
 		return enabled
@@ -249,8 +263,8 @@ function PublicInterface.Dropdown(name, parent)
 		RepaintValueFrames(0)
 		dropdownScrollbar:SetEnabled(#orderedKeys > MAX_VALUES)
 		
-		self:SetEnabled(#orderedKeys > 0)
-		self:SetSelectedKey(orderedKeys[1])
+		bDropdown:SetEnabled(#orderedKeys > 0)
+		bDropdown:SetSelectedKey(orderedKeys[1])
 	end	
 	
 	function bDropdown:GetSelectedValue()
@@ -272,10 +286,10 @@ function PublicInterface.Dropdown(name, parent)
 		
 		selectedText:SetText(text)
 		selectedText:SetFontColor(unpack(color))
-		
-		if self.Event.SelectionChanged then
-			self.Event.SelectionChanged(self, selectedKey, value)
-		end			
+
+		if bDropdown.Event.SelectionChanged then
+			bDropdown.Event.SelectionChanged(bDropdown, selectedKey, value)
+		end
 	end
 	
 	function bDropdown:SetOrderSelector(order)

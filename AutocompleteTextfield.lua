@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Autocomplete Textfield                                                                                                                          *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.17 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.6 / 2013.02.20 / Baanano: First version                                                                                                     *
 -- ***************************************************************************************************************************************************
 
@@ -79,43 +80,48 @@ function PublicInterface.AutocompleteTextfield(name, parent)
 	textComplete:SetFontColor(.5, .5, .4, 1)
 	textComplete:SetVisible(false)
 	
-	function frame.Event:LeftClick()
-		textbox:SetKeyFocus(true)
-	end
-	
-	function textbox.Event:TextfieldChange()
-		ResetTextComplete()
-	end
-	
-	function textbox.Event:KeyFocusGain()
-		textComplete:SetVisible(true)
-	end
-	
-	function textbox.Event:KeyFocusLoss()
-		textComplete:SetVisible(false)
-	end
-	
-	function textbox.Event:KeyType(key)
-		local text = textbox:GetText()
-		if key == "\9" then
-			offset = offset + 1
-			textbox:SetCursor(text:len())
+	frame:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			textbox:SetKeyFocus(true)
+		end, frame:GetName() .. ".OnLeftClick")
+
+	textbox:EventAttach(Event.UI.Textfield.Change,
+		function()
 			ResetTextComplete()
-		elseif key == "\13" then
-			local complete = TryComplete(text)
-			if complete then
-				textbox:SetText(complete)
-				textbox:SetCursor(complete:len())
-				ResetTextComplete()
-			end
-			if frame.Event.EnterPressed then
-				frame.Event.EnterPressed(frame)
-			end			
-		elseif key ~= "" then
-			offset = 0
-		end
-	end
+		end, textbox:GetName() .. ".OnTextfieldChange")
+
+	textbox:EventAttach(Event.UI.Input.Key.Focus.Gain,
+		function()
+			textComplete:SetVisible(true)
+		end, textbox:GetName() .. ".OnKeyFocusGain")
 	
+	textbox:EventAttach(Event.UI.Input.Key.Focus.Loss,
+		function()
+			textComplete:SetVisible(false)
+		end, textbox:GetName() .. ".OnKeyFocusLoss")
+	
+	textbox:EventAttach(Event.UI.Input.Key.Type,
+		function(self, h, key)
+			local text = textbox:GetText()
+			if key == "\9" then
+				offset = offset + 1
+				textbox:SetCursor(text:len())
+				ResetTextComplete()
+			elseif key == "\13" then
+				local complete = TryComplete(text)
+				if complete then
+					textbox:SetText(complete)
+					textbox:SetCursor(complete:len())
+					ResetTextComplete()
+				end
+				if frame.Event.EnterPressed then
+					frame.Event.EnterPressed(frame)
+				end			
+			elseif key ~= "" then
+				offset = 0
+			end
+		end, textbox:GetName() .. ".OnKeyType")
+
 	PublicInterface.EventHandler(frame, { "TextChanged", "EnterPressed" })
 	
 	function frame:GetText()

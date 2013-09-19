@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Popup Manager                                                                                                                                   *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.19 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.1 / 2012.08.23 / Baanano: First version                                                                                                     *
 -- ***************************************************************************************************************************************************
 
@@ -43,31 +44,8 @@ function PublicInterface.PopupManager(name, parent)
 	mainFrame:SetVisible(visible)
 	
 	local function eventSink() end
-	mainFrame.Event.LeftClick = eventSink
-	mainFrame.Event.LeftDown = eventSink
-	mainFrame.Event.LeftUp = eventSink
-	mainFrame.Event.LeftUpoutside = eventSink
-	mainFrame.Event.RightClick = eventSink
-	mainFrame.Event.RightDown = eventSink
-	mainFrame.Event.RightUp = eventSink
-	mainFrame.Event.RightUpoutside = eventSink
-	mainFrame.Event.MiddleClick = eventSink
-	mainFrame.Event.MiddleDown = eventSink
-	mainFrame.Event.MiddleUp = eventSink
-	mainFrame.Event.MiddleUpoutside = eventSink
-	mainFrame.Event.Mouse4Click = eventSink
-	mainFrame.Event.Mouse4Down = eventSink
-	mainFrame.Event.Mouse4Up = eventSink
-	mainFrame.Event.Mouse4Upoutside = eventSink
-	mainFrame.Event.Mouse5Click = eventSink
-	mainFrame.Event.Mouse5Down = eventSink
-	mainFrame.Event.Mouse5Up = eventSink
-	mainFrame.Event.Mouse5Upoutside = eventSink
-	mainFrame.Event.MouseIn = eventSink
-	mainFrame.Event.MouseMove = eventSink
-	mainFrame.Event.MouseOut = eventSink
-	mainFrame.Event.WheelBack = eventSink
-	mainFrame.Event.WheelForward = eventSink
+	mainFrame:EventAttach(Event.UI.Input.Mouse.Left.Click, eventSink, "dummy")
+	mainFrame:EventAttach(Event.UI.Input.Mouse.Wheel.Forward, eventSink, "dummy")
 	
 	local parentSetVisible = parent.SetVisible
 	function parent:SetVisible(parentVisible)

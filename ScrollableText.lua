@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Text frame that can be scrolled                                                                                                                 *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12 / 2013.09.19 / Baanano: Updated to the new event model                                                                                   *
 -- * 0.4.4 RC5 / 2012.01.13 / Baanano: Moved to Yague from BiSCal                                                                                    *
 -- ***************************************************************************************************************************************************
 
@@ -40,21 +41,26 @@ function PublicInterface.ScrollableText(name, parent)
 	
 	textFrame:SetWordwrap(true)
 	
-	function mask.Event:Size()
-		ResetSize()
-	end
+	mask:EventAttach(Event.UI.Layout.Size,
+		function()
+			ResetSize()
+		end, mask:GetName() .. ".OnSize")
 	
-	function frame.Event:WheelForward()
-		scrollBar:NudgeUp()
-	end
+	frame:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+		function()
+			scrollBar:NudgeUp()
+		end, frame:GetName() .. ".OnWheelForward")
 	
-	function frame.Event:WheelBack()
-		scrollBar:NudgeDown()
-	end
+	frame:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+		function()
+			scrollBar:NudgeDown()
+		end, frame:GetName() .. ".OnWheelBack")
 	
-	function scrollBar.Event:ScrollbarChange()
-		ResetPosition()
-	end
+	scrollBar:EventAttach(Event.UI.Scrollbar.Change,
+		function()
+			ResetPosition()
+		end, scrollBar:GetName() .. ".OnScrollbarChange")
+	
 	
 	ResetSize()
 
