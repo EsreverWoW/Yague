@@ -3,13 +3,15 @@
 -- ***************************************************************************************************************************************************
 -- * Calendar control                                                                                                                                *
 -- ***************************************************************************************************************************************************
--- * 0.4.4 RC5 / 2012.01.13 / Baanano: Moved to Yague from BiSCal                                                                                    *
+-- * 0.4.12/ 2013.09.17 / Baanano: Updated to the new event model                                                                                    *
+-- * 0.4.4 / 2012.01.13 / Baanano: Moved to Yague from BiSCal                                                                                        *
 -- ***************************************************************************************************************************************************
 
 local addonInfo, Internal = ...
 local addonID = addonInfo.identifier
 local PublicInterface = _G[addonID]
 
+local CEAttach = Command.Event.Attach
 local EventHandler = PublicInterface.EventHandler
 local ITFrame = Inspect.Time.Frame
 local MFloor = math.floor
@@ -87,19 +89,21 @@ local function CreateDayFrame(name, parent, evenAppearance)
 	hourText:SetLayer(10)
 	hourText:SetVisible(false)
 	
-	function dayFrame.Event:LeftClick()
-		if type(onSelect) == "function" then
-			onSelect()
-		end
-	end
+	dayFrame:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			if type(onSelect) == "function" then
+				onSelect()
+			end
+		end, dayFrame:GetName() .. ".OnLeftClick")
 	
-	function moreTexture.Event:LeftClick()
-		if type(onSelect) == "function" then
-			onSelect()
-		end
-		counter = counter + 1
-		RefreshEvent()
-	end
+	moreTexture:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			if type(onSelect) == "function" then
+				onSelect()
+			end
+			counter = counter + 1
+			RefreshEvent()
+		end, moreTexture:GetName() .. ".OnLeftClick")
 	
 	
 	function dayFrame:SetValue(day, faded, selected, dayEvents, selectFunction)
@@ -240,53 +244,57 @@ function PublicInterface.Calendar(name, parent)
 	
 	monthContent:SetBackgroundColor(0, 0.0625, 0.125, 0.5)
 	
-	function prevButton.Event:LeftClick()
-		local prevMonth = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = 0 })).month
-		selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month - 1, day = selectedDate.day }))
-		while selectedDate.month ~= prevMonth do
-			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 1 }))
-		end
+	prevButton:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			local prevMonth = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = 0 })).month
+			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month - 1, day = selectedDate.day }))
+			while selectedDate.month ~= prevMonth do
+				selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 1 }))
+			end
 
-		if frame.Event.DateChanged then
-			frame.Event.DateChanged(frame, GetMidnightSelectedDate())
-		end
+			if frame.Event.DateChanged then
+				frame.Event.DateChanged(frame, GetMidnightSelectedDate())
+			end
 
-		ResetDate()
-	end
+			ResetDate()
+		end, prevButton:GetName() .. ".OnLeftClick")
 	
-	function nextButton.Event:LeftClick()
-		local nextMonth = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = 32 })).month
-		selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month + 1, day = selectedDate.day }))
-		while selectedDate.month ~= nextMonth do
-			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 1 }))
-		end
+	nextButton:EventAttach(Event.UI.Input.Mouse.Left.Click,
+		function()
+			local nextMonth = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = 32 })).month
+			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month + 1, day = selectedDate.day }))
+			while selectedDate.month ~= nextMonth do
+				selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 1 }))
+			end
 
-		if frame.Event.DateChanged then
-			frame.Event.DateChanged(frame, GetMidnightSelectedDate())
-		end
+			if frame.Event.DateChanged then
+				frame.Event.DateChanged(frame, GetMidnightSelectedDate())
+			end
 
-		ResetDate()
-	end
+			ResetDate()
+		end, nextButton:GetName() .. ".OnLeftClick")
 	
-	function monthPanel.Event:WheelForward()
-		selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 7 }))
-		
-		if frame.Event.DateChanged then
-			frame.Event.DateChanged(frame, GetMidnightSelectedDate())
-		end
-		
-		ResetDate()
-	end
+	monthPanel:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+		function()
+			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day - 7 }))
+			
+			if frame.Event.DateChanged then
+				frame.Event.DateChanged(frame, GetMidnightSelectedDate())
+			end
+			
+			ResetDate()
+		end, monthPanel:GetName() .. ".OnWheelForward")
 	
-	function monthPanel.Event:WheelBack()
-		selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day + 7 }))
+	monthPanel:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+		function()
+			selectedDate = ODate("*t", OTime({ year = selectedDate.year, month = selectedDate.month, day = selectedDate.day + 7 }))
 
-		if frame.Event.DateChanged then
-			frame.Event.DateChanged(frame, GetMidnightSelectedDate())
-		end
+			if frame.Event.DateChanged then
+				frame.Event.DateChanged(frame, GetMidnightSelectedDate())
+			end
 
-		ResetDate()
-	end
+			ResetDate()
+		end, monthPanel:GetName() .. ".OnWheelBack")
 	
 	function frame:SetData(data)
 		calendarData = data
@@ -338,8 +346,8 @@ function PublicInterface.Calendar(name, parent)
 		updateFrequency = frequency
 	end
 	
-	function frame.Event:MouseIn() end
-	function frame.Event:WheelBack() end
+	frame:EventAttach(Event.UI.Input.Mouse.Cursor.In, function() end, "Dummy")
+	frame:EventAttach(Event.UI.Input.Mouse.Wheel.Back, function() end, "Dummy")
 	
 	local nextIndex = 1
 	local lastUpdate = ITFrame()
@@ -353,7 +361,7 @@ function PublicInterface.Calendar(name, parent)
 			end
 		end
 	end
-	TInsert(Event.System.Update.Begin, { OnUpdate, addonID, addonID .. ".CalendarControl." .. name .. ".OnUpdate" })
+	CEAttach(Event.System.Update.Begin, OnUpdate, addonID .. ".CalendarControl." .. name .. ".OnUpdate")
 	
 	ResetDate()
 	ResetWeekdays()

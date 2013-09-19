@@ -3,6 +3,7 @@
 -- ***************************************************************************************************************************************************
 -- * Money frame                                                                                                                                     *
 -- ***************************************************************************************************************************************************
+-- * 0.4.12/ 2013.09.17 / Baanano: Updated to the new event model                                                                                    *
 -- * 0.4.1 / 2012.07.16 / Baanano: Rewritten                                                                                                         *
 -- ***************************************************************************************************************************************************
 
@@ -83,77 +84,85 @@ function PublicInterface.MoneySelector(name, parent)
 	end
 	
 	local function GiveFocus(panel, input)
-		function panel.Event:LeftClick()
-			input:SetKeyFocus(true)
-		end
+		panel:EventAttach(Event.UI.Input.Mouse.Left.Click,
+			function()
+				input:SetKeyFocus(true)
+			end, panel:GetName() .. ".OnLeftClick")
 	end
 	
 	local function AssignWheelEvents(panel, step)
-		function panel.Event:WheelForward()
-			if enabled then
-				local currentValue = bMoneySelector:GetValue()
-				bMoneySelector:SetValue(currentValue + step)
-			end
-		end
-		function panel.Event:WheelBack()
-			if enabled then
-				local currentValue = bMoneySelector:GetValue()
-				local decrement = step
-				while decrement > 1 and decrement > currentValue do decrement = MFloor(decrement / 100) end
-				bMoneySelector:SetValue(currentValue - decrement)
-			end
-		end
+		panel:EventAttach(Event.UI.Input.Mouse.Wheel.Forward,
+			function()
+				if enabled then
+					local currentValue = bMoneySelector:GetValue()
+					bMoneySelector:SetValue(currentValue + step)
+				end
+			end, panel:GetName() .. ".OnWheelForward")
+		
+		panel:EventAttach(Event.UI.Input.Mouse.Wheel.Back,
+			function()
+				if enabled then
+					local currentValue = bMoneySelector:GetValue()
+					local decrement = step
+					while decrement > 1 and decrement > currentValue do decrement = MFloor(decrement / 100) end
+					bMoneySelector:SetValue(currentValue - decrement)
+				end
+			end, panel:GetName() .. ".OnWheelBack")
 	end
 	
 	local function AssignKeyEvents(input, minValue, maxValue, nextInput)
 		local lastText, lastCursor, ignoreChange
 		
-		function input.Event:KeyType(key)
-			lastText = self:GetText()
-			lastCursor = self:GetCursor()
-			ignoreChange = not tonumber(key) and SByte(key) and SByte(key) ~= 8
-		end
+		input:EventAttach(Event.UI.Input.Key.Type,
+			function(self, h, key)
+				lastText = self:GetText()
+				lastCursor = self:GetCursor()
+				ignoreChange = not tonumber(key) and SByte(key) and SByte(key) ~= 8
+			end, input:GetName() .. ".OnKeyType")
 		
-		function input.Event:TextfieldChange()
-			local newText = self:GetText()
-			local newValue = tonumber(newText) or 0
-			
-			if not enabled or ignoreChange or newValue > maxValue or newValue < minValue then
-				self:SetText(lastText)
-				self:SetCursor(lastCursor)
-				return
-			end
-			
-			self:SetText(tostring(newValue))
-			
-			local platinum = tonumber(platinumInput:GetText()) or 0
-			local gold = tonumber(goldInput:GetText()) or 0
-			local silver = tonumber(silverInput:GetText()) or 0
-			
-			bMoneySelector:SetValue(platinum * 10000 + gold * 100 + silver)
-			
-			if self:GetText() == "0" then
-				self:SetCursor(1)
-			end
-		end
+		input:EventAttach(Event.UI.Textfield.Change,
+			function(self)
+				local newText = self:GetText()
+				local newValue = tonumber(newText) or 0
+				
+				if not enabled or ignoreChange or newValue > maxValue or newValue < minValue then
+					self:SetText(lastText)
+					self:SetCursor(lastCursor)
+					return
+				end
+				
+				self:SetText(tostring(newValue))
+				
+				local platinum = tonumber(platinumInput:GetText()) or 0
+				local gold = tonumber(goldInput:GetText()) or 0
+				local silver = tonumber(silverInput:GetText()) or 0
+				
+				bMoneySelector:SetValue(platinum * 10000 + gold * 100 + silver)
+				
+				if self:GetText() == "0" then
+					self:SetCursor(1)
+				end
+			end, input:GetName() .. ".OnTextfieldChange")
 		
-		function input.Event:KeyUp(key)
-			if key == "Tab" or key == "Return" or key == "Period" or key == "Space" or key == "Numpad Decimal" then
-				if nextInput then
-					nextInput:SetKeyFocus(true)
-				else
+		input:EventAttach(Event.UI.Input.Key.Up,
+			function(self, h, key)
+				if key == "Tab" or key == "Return" or key == "Period" or key == "Space" or key == "Numpad Decimal" then
+					if nextInput then
+						nextInput:SetKeyFocus(true)
+					else
+						bMoneySelector:SetKeyFocus(true)
+						bMoneySelector:SetKeyFocus(false)
+					end
+				end
+			end, input:GetName() .. ".OnKeyUp")
+		
+		input:EventAttach(Event.UI.Input.Key.Focus.Gain,
+			function()
+				if not enabled then
 					bMoneySelector:SetKeyFocus(true)
 					bMoneySelector:SetKeyFocus(false)
 				end
-			end
-		end
-		
-		function input.Event:KeyFocusGain()
-			if not enabled then
-				bMoneySelector:SetKeyFocus(true)
-				bMoneySelector:SetKeyFocus(false)
-			end
-		end
+			end, input:GetName() .. ".OnKeyFocusGain")
 	end
 	
 	platinumPanel:SetPoint("TOPLEFT", bMoneySelector, "TOPLEFT", 0, 0)
