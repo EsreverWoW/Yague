@@ -1,0 +1,6 @@
+package-as: Yague
+manual-changelog: ChangeLog.txt
+enable-nolib-creation: no
+externals:
+    LibAsyncTextures:
+        git://git.curseforge.net/rift/lib-async-textures/mainline.git
