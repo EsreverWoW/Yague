@@ -336,18 +336,7 @@ function PublicInterface.DataGrid(name, parent)
 							row:SetBackgroundColor(unpack(colorSelector))
 							row:SetVisible(true)
 							
-							row:EventAttach(Event.UI.Input.Mouse.Left.Click,
-								function()
-									bDataGrid:SetSelectedKey(dataKey)
-								end, row:GetName() .. ".OnLeftClick")
-							
-							row:EventAttach(Event.UI.Input.Mouse.Right.Click,
-								function()
-									bDataGrid:SetSelectedKey(dataKey)
-									if bDataGrid.Event.RowRightClick then
-										bDataGrid.Event.RowRightClick(bDataGrid, dataKey, dataKey and data[dataKey] or nil)
-									end
-								end, row:GetName() .. ".OnRightClick")
+							row.dataKey = dataKey
 						end
 					else
 						if columnIndex == 1 then
@@ -408,9 +397,30 @@ function PublicInterface.DataGrid(name, parent)
 			local newRow = UICreateFrame("Frame", bDataGrid:GetName() .. ".Rows." .. newIndex, internalPanelContent)
 			
 			newRow.cells = {}
+			newRow.dataKey = nil
 			for columnID, columnData in pairs(columns) do
 				newRow.cells[columnID] = CreateCell(newRow, columnID, columnData.cellType)
 			end
+			
+			newRow:EventAttach(Event.UI.Input.Mouse.Left.Click.Dive,
+				function(self, h)
+					if h:GetTarget() ~= newRow then
+						bDataGrid:SetSelectedKey(newRow.dataKey)
+					end
+				end, newRow:GetName() .. ".OnLeftClickDive")
+			
+			newRow:EventAttach(Event.UI.Input.Mouse.Left.Click,
+				function()
+					bDataGrid:SetSelectedKey(newRow.dataKey)
+				end, newRow:GetName() .. ".OnLeftClick")
+			
+			newRow:EventAttach(Event.UI.Input.Mouse.Right.Click.Dive,
+				function()
+					bDataGrid:SetSelectedKey(newRow.dataKey)
+					if bDataGrid.Event.RowRightClick then
+						bDataGrid.Event.RowRightClick(bDataGrid, newRow.dataKey, newRow.dataKey and data[newRow.dataKey] or nil)
+					end
+				end, newRow:GetName() .. ".OnRightClickDive")			
 			
 			TInsert(rows, newRow)
 		end
