@@ -1,0 +1,3 @@
+[submodule "LibAsyncTextures"]
+	path = LibAsyncTextures
+	url = https://github.com/EsreverWoW/LibAsyncTextures
